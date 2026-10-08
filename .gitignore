@@ -1,0 +1,35 @@
+# Oberon (out-of-context telemetry, postmortems, raw blobs)
+.oberon/
+
+# macOS
+.DS_Store
+*.dSYM/
+
+# LaTeX intermediate files (keep source and PDFs)
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.nav
+*.snm
+*.vrb
+
+# Compiled code and Python caches
+*.o
+*.a
+*.so
+*.dylib
+__pycache__/
+*.pyc
+.venv/
+/C++/CPlusPlus_Practicals/practical1
+
+# Local credentials
+.env
+.env.*
+!.env.example

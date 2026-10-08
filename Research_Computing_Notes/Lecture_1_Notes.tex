@@ -1,0 +1,207 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,booktabs,longtable,xcolor,listings,hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue}
+\lstset{basicstyle=\ttfamily\small,breaklines=true,columns=fullflexible,keepspaces=true,frame=single,showstringspaces=false}
+\setlength{\parindent}{0pt}\setlength{\parskip}{5pt}
+\title{Research Computing: Lecture 1\\\large Linux Basics --- Study Notes}
+\author{Prepared for J. Xie}\date{}
+\begin{document}\maketitle
+\textbf{Source:} Philip Blakely, Centre for Scientific Computing, University of Cambridge, \path{Handout_1_full.pdf}, PDF pages 1--37. The footer numbers these within a larger 166-slide course. These notes paraphrase the supplied handout; the personalised setup advice, clarifications, and practice exercise are added study aids.
+\tableofcontents
+\section{Purpose and your setup (pp.~3--6)}
+The lecture introduces the Linux command line. Later course topics include text processing, networking, scripting, compiling/linking, Makefiles, and version control.
+
+Your Mac already has a Unix-like terminal and Homebrew. Homebrew installs software; it does not turn macOS into Linux. Apollo is a remote Linux computer. A terminal in VS Code's SSH window operates on Apollo's files, whereas a local terminal operates on your Mac. Your Desktop folder and remote home folder are separate.
+\begin{lstlisting}
+# On your Mac: connect using your configured SSH alias
+ssh cambridge-csc
+# On Apollo: check who and where you are
+whoami
+hostname
+pwd
+# Leave the SSH session
+exit
+\end{lstlisting}
+The SSH commands are personalised setup context. Keep Cambridge VPN connected when required to reach CSC from outside the University network. The handout stresses understanding commands and agent-generated instructions before running them: consider effects on your data and shared resources.
+\section{Linux and the Unix philosophy (pp.~7--10)}
+\textbf{Linux} technically means the kernel: the interface between applications and hardware. \textbf{GNU/Linux} combines it with tools and other software. A \textbf{distribution} packages a complete operating system. The handout lists Ubuntu (CSC), Debian (Ubuntu's basis), Red Hat, Fedora, and Rocky Linux (CSD3). Skills largely transfer between distributions.
+
+The Unix philosophy is to combine small programs with focused jobs, using text streams to connect them. A pipeline lets several simple tools perform a complex task.
+
+Linux also has desktop applications: the slides mention Firefox, Thunderbird, LibreOffice, GIMP, and Inkscape. This lecture focuses on the terminal.
+\section{Prompts, paths, and directories (pp.~11--14)}
+\begin{lstlisting}
+jx355@apollo:~$
+\end{lstlisting}
+This identifies user \texttt{jx355}, machine \texttt{apollo}, and the home directory \texttt{\~{}}. The dollar sign is the prompt: do not type it with commands.
+\begin{longtable}{p{0.36\linewidth}p{0.57\linewidth}}
+\toprule Command & Meaning \\ \midrule
+\texttt{ls} & List current directory contents. \\
+\texttt{pwd} & Print your current directory's full path. \\
+\texttt{cd Documents} & Enter a directory relative to your current location. \\
+\texttt{cd} or \texttt{cd \~{}} & Return home. \\
+\texttt{cd ..} & Move to the parent directory. \\
+\texttt{cd -} & Return to your previous working directory. \\
+\texttt{mkdir MPhil} & Create a directory. \\
+\texttt{mkdir -p}\newline\texttt{MPhil/Assignment1} & Create a directory and missing parents. \\
+\bottomrule
+\end{longtable}
+\textbf{Absolute paths} start at the root directory \texttt{/}; \textbf{relative paths} start from the current directory. \texttt{.} means the current directory and \texttt{..} its parent. Directories form a tree; slashes separate path components.
+
+Root \texttt{/} differs from your home directory and from the administrator account named \texttt{root}. Common locations: \texttt{/usr/bin} for executables, \texttt{/usr/lib} for libraries, and \texttt{/opt} or \texttt{/usr/local} for additional software. CSC uses \texttt{/lsc/opt}. Your home path may differ from \texttt{/home/jx355}; run \texttt{cd} then \texttt{pwd} to find it.
+\section{Files, help, and typing (pp.~15--19)}
+\begin{lstlisting}
+cat notes.txt      # Display text contents
+man ls            # Read a command's manual
+ls -a             # Include hidden entries
+ls -l             # Detailed listing
+ls -al            # Same options combined
+man 3 printf      # Specify a manual section
+\end{lstlisting}
+\texttt{cat} joins/displays file contents to stdout. Avoid displaying binary executables as text: the output can disrupt your terminal.
+
+In manual pages, navigate with arrows, search with \texttt{/}, and quit with \texttt{q}. Manual sections distinguish command documentation from, for example, library functions of the same name. Options commonly begin with \texttt{-}; some short options combine.
+
+Use up/down arrows to recall commands and Tab to complete names. In the Bash behaviour described by the slides, pressing Tab twice lists alternatives. Your Mac's default zsh may behave differently.
+
+Spaces separate command arguments. Prefer filenames without spaces, or quote/escape them:
+\begin{lstlisting}
+cat "My Data.dat"
+cat My\ Data.dat
+\end{lstlisting}
+The slides introduce gedit, Emacs, Vim, Geany, Sublime Text, and VS Code. Your VS Code Remote SSH window edits remote files. The lecture links CSC's VS Code guidance, including home-quota considerations.
+\section{Identity and shared resources (pp.~20--21)}
+\begin{lstlisting}
+whoami     # Current username
+groups     # Group memberships
+id         # User ID, group ID, memberships
+passwd     # Change your password interactively
+who        # Currently logged-in users
+last       # Recent login history
+top        # Processes/resource use; press q to quit
+\end{lstlisting}
+The handout asks users to change their initial password. Run \texttt{passwd} on Apollo and follow its prompts privately. The CSC login password differs from the passphrase used to reveal it in the email's secret link.
+
+Many users share the machine: avoid excessive CPU, memory, and disk activity. The slides recommend lowering priority for long-running commands. An explicit spelling of their \texttt{nice -19} example is:
+\begin{lstlisting}
+nice -n 19 ./myProgram
+\end{lstlisting}
+A larger niceness value means lower scheduling priority. This does not cap memory or runtime; follow CSC's separate rules for compute-intensive jobs.
+
+The lecture compares load average with CPU core count. A clarification: Linux load includes runnable tasks and tasks in uninterruptible sleep (often waiting for I/O); it is not a CPU percentage.
+\section{Standard streams and redirection (pp.~22--26)}
+\begin{center}\begin{tabular}{lll}
+\toprule Stream & Descriptor & Default \\ \midrule
+stdin & 0 & Input from terminal \\
+stdout & 1 & Normal output to terminal \\
+stderr & 2 & Diagnostics/errors to terminal \\
+\bottomrule\end{tabular}\end{center}
+Redirection makes repeated runs easier by taking inputs from files and saving outputs.
+\begin{lstlisting}
+./myProgram < myInput > myOutput
+./myProgram < myInput >> myOutput
+./myProgram < myInput > myOutput 2> myErrors
+./myProgram < myInput > combined.log 2>&1
+\end{lstlisting}
+\texttt{<} supplies stdin. \texttt{>} creates or overwrites output; \texttt{>>} appends. \texttt{2>} redirects stderr. \texttt{2>\&1} sends stderr to stdout's current destination; order matters, so place it after the file redirection to combine both streams there. The slides also show Bash shorthand \texttt{>\&}; the explicit form is clearer.
+
+\textbf{Remember:} \texttt{>} can erase existing contents when the shell opens the file, even if the program later fails.
+\section{Pipes and text tools (pp.~25--28)}
+A pipe \texttt{|} connects one command's stdout to another's stdin; stderr is normally separate.
+\begin{lstlisting}
+cat Makefile | wc
+wc < Makefile
+wc Makefile
+\end{lstlisting}
+These count the same contents, but the final version also prints the filename. Default \texttt{wc} reports lines, words, and bytes. The slides call the last count characters; bytes and characters can differ for Unicode. Use \texttt{wc -l} for lines and \texttt{wc -m} for characters.
+
+\texttt{sort} sorts lines. \texttt{uniq} removes repeated \emph{adjacent} lines. To remove repeated lines wherever they occurred, sort first. \texttt{spell} identifies possible spelling errors, where installed; \texttt{detex} can remove LaTeX markup first.
+\begin{lstlisting}
+spell Project_1.tex | sort | uniq
+spell Project_1.tex | sort | uniq >> Project_1_typos
+./myProgram 2>&1 | tee myProgram.out | ./postProcess.sh
+\end{lstlisting}
+\texttt{tee} copies input to both a file and stdout, so a pipeline can continue. It overwrites by default; \texttt{tee -a} appends. The slides use Bash \texttt{|\&} to pipe stdout and stderr together; the example above writes this explicitly. The processing script must exist and be executable.
+\section{Manipulate, search, compare (pp.~29--30)}
+\begin{lstlisting}
+cp Thesis.tex Thesis_old.tex
+cp -r Thesis Thesis_old
+mv Thesis.tex Chapter1.tex
+rm unwanted.txt
+ls *.pdf
+grep -r "FIXME" ./MPhil_SourceCode
+find ./MPhil -name "MyPlot.png"
+diff Thesis_1.tex Thesis_2.tex
+\end{lstlisting}
+\texttt{cp} copies; \texttt{cp -r} copies a directory recursively. \texttt{mv} moves/renames. \texttt{rm} removes. Copies/moves can overwrite existing destinations.
+
+\textbf{Wildcards:} \texttt{*} matches zero or more characters; \texttt{?} matches one. \texttt{simOutput?.png} matches \texttt{simOutput1.png}, but not \texttt{simOutput13.png}. The shell expands unquoted wildcards before running the command. Quote a pattern in \texttt{find -name '*.png'} so \texttt{find} interprets it.
+
+\texttt{grep} searches file contents; \texttt{find} searches filesystem entries. \texttt{diff} compares text; normal output uses \texttt{<} for lines from the first file and \texttt{>} for the second.
+
+The lecture shows \texttt{rm -rf} for forced recursive removal. Terminal deletion normally bypasses Trash. Preview wildcard matches with \texttt{ls} before deleting anything.
+\section{Permissions and groups (pp.~31--34, 36)}
+\begin{lstlisting}
+-rw-r--r--  1 jx355 csc 9628 Oct 8 notes.txt
+drwxr-x---  2 jx355 csc 4096 Oct 8 coursework
+\end{lstlisting}
+The initial character gives type: \texttt{-} regular file, \texttt{d} directory, \texttt{l} symbolic link. The following nine characters form three triplets: owner/user, group, others.
+
+For a file, \texttt{r} means read, \texttt{w} write, \texttt{x} execute. For a directory, \texttt{r} permits listing names, \texttt{x} permits traversal, and \texttt{w} permits changing entries (usually also requiring \texttt{x}). Directory semantics are an explanatory addition. Access depends on directories along the path; deletion depends chiefly on the parent directory's permissions.
+
+\texttt{-rw-r--r--}: owner reads/writes; group and others read. \texttt{-rwxr-xr-x}: owner has all permissions; group and others read/execute.
+\begin{lstlisting}
+chmod go-r myFile       # Remove group/others read access
+chmod u+x myScript     # Add owner execute access
+chgrp mygroup myFile   # Change group, if permitted
+\end{lstlisting}
+In symbolic \texttt{chmod}, \texttt{u/g/o} select owner/group/others, \texttt{+/-} add/remove, and \texttt{r/w/x} select permissions. \texttt{go-r} only removes read permission; any other permissions remain.
+
+The handout says CSC defaults make newly created files readable/writable only by the owner. Defaults vary across systems: inspect actual permissions with \texttt{ls -l} rather than assuming every existing file is private.
+\section{Symbolic links and file types (pp.~35--37)}
+A symbolic link refers to another path rather than making a copy. Editing via the link affects its target. Removing the link itself leaves the target; moving/removing the target can break the link.
+\begin{lstlisting}
+ln -s /path/to/existing/data data_link
+ls -l data_link
+file image.png
+file /usr/bin/gcc
+\end{lstlisting}
+The first example is schematic: substitute a real target. Order is target, then link name. Linux does not rely solely on extensions for file types or executability. \texttt{file} inspects contents to suggest a type. Renaming a file does not convert its format.
+\section{Practice workflow (added study exercise)}
+Run on Apollo in a fresh practice directory. If this directory already exists, choose a different name to preserve your work.
+\begin{lstlisting}
+cd ~
+mkdir lecture1-practice
+cd lecture1-practice
+pwd
+printf 'banana\napple\nbanana\n' > words.txt
+cat words.txt
+wc -l words.txt
+sort words.txt | uniq > unique_words.txt
+cat unique_words.txt
+cp words.txt words_backup.txt
+diff words.txt words_backup.txt
+printf 'pear\n' >> words.txt
+diff words_backup.txt words.txt
+ls -l
+chmod go-r words_backup.txt
+ls -l words_backup.txt
+ln -s words.txt words_link.txt
+cat words_link.txt
+find . -name '*.txt'
+grep 'banana' words.txt
+\end{lstlisting}
+Expected results: original line count 3; unique sorted output \texttt{apple}, then \texttt{banana}; first comparison no output; second comparison shows an added \texttt{pear} line. Reading through the link shows the updated original. Keep the files for revision.
+\section{Revision questions and answers}
+\begin{enumerate}
+\item Absolute versus relative path? Root-based versus current-directory-based.
+\item \texttt{>} versus \texttt{>>}? Overwrite versus append.
+\item Why sort before \texttt{uniq}? It only removes adjacent repeated lines.
+\item \texttt{grep} versus \texttt{find}? Contents versus filesystem entries.
+\item Decode \texttt{-rwxr-x---}. Regular file; owner read/write/execute; group read/execute; others none.
+\item Symbolic link versus copy? Reference to a target versus an independent file.
+\item Where do Remote SSH terminal commands run? On the remote server, Apollo in your CSC session.
+\end{enumerate}
+\end{document}
